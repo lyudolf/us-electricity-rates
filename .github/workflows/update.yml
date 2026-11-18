@@ -1,0 +1,46 @@
+name: Update data
+
+# The site rebuilds its files on the 2nd and 28th, after EIA publishes a new month.
+# This copies them here a day later.
+on:
+  schedule:
+    - cron: "0 18 3,29 * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: update-data
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download the latest files
+        run: |
+          set -euo pipefail
+          for f in electricity-rates-by-state.csv electricity-monthly-by-state.csv; do
+            curl -fsSL --retry 3 "https://averageelectricbill.com/data/$f" -o "data/$f.new"
+            # refuse anything that is not the expected CSV (an error page, an empty file)
+            head -1 "data/$f.new" | grep -q '^state,state_code,'
+            test "$(wc -l < "data/$f.new")" -ge 50
+            mv "data/$f.new" "data/$f"
+          done
+
+      - name: Commit if the data changed
+        run: |
+          if [ -n "$(git status --porcelain data)" ]; then
+            period="$(tail -1 data/electricity-rates-by-state.csv | cut -d, -f8)"
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add data
+            git commit -m "Data through $period"
+            git push
+          else
+            echo "No change."
+          fi
