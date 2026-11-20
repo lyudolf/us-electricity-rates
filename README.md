@@ -79,6 +79,7 @@ All figures come from the EIA open data API, [electricity retail sales](https://
 
 Pages that use this data:
 
+- [Electric bill statistics](https://averageelectricbill.com/electric-bill-statistics): the main U.S. numbers in one place
 - [Average electric bill by state](https://averageelectricbill.com/electricity)
 - [Winter electric bills by state](https://averageelectricbill.com/guides/winter-electric-bills-by-state)
 - [Monthly electricity price reports](https://averageelectricbill.com/reports)
